@@ -1,18 +1,16 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Configuration;
 
-namespace SQLSERVERPROCEDURE
+namespace WebApp
 {
     public static class SQLSERVER
     {
-        public static DataTable Query(string NombreConexion, string Procedimiento, Dictionary<string, string> VariableYValores, DataTable dt)
+        public static DataTable Exec(string NombreConexion, string Procedimiento, Dictionary<string, object> VariableYValores, DataTable dt = null)
         {
+            DataTable _dt = dt == null ? new DataTable() : dt;
             using (SqlConnection conn = new SqlConnection(ConfigurationManager.AppSettings[NombreConexion]))
             {
                 try
@@ -24,27 +22,31 @@ namespace SQLSERVERPROCEDURE
 
                     if (VariableYValores.Count > 0)
                     {
-                        foreach (KeyValuePair<string, string> var in VariableYValores)
+                        foreach (var var in VariableYValores)
                         {
                             command.Parameters.Add(new SqlParameter(var.Key, var.Value));
                         }
                     }
 
                     SqlDataReader dr = command.ExecuteReader();
-                    dt.Load(dr);
+                    _dt.Load(dr);
                     conn.Close();
-                    return dt;
+                    return _dt;
                 }
-                catch (Exception)
+                catch (SqlException ex)
                 {
-                    throw;
+                    throw ex;
+                }
+                catch (Exception ex)
+                {
+                    throw ex;
                 }
             }
         }
 
-        public static DataSet Query(string NombreConexion, string Procedimiento, Dictionary<string, string> VariableYValores, DataSet ds)
+        public static DataSet Exec(string NombreConexion, string Procedimiento, Dictionary<string, object> VariableYValores, DataSet ds = null)
         {
-
+            DataSet _ds = ds == null ? new DataSet() : ds;
             using (SqlConnection conn = new SqlConnection(ConfigurationManager.AppSettings[NombreConexion]))
             {
                 try
@@ -57,7 +59,7 @@ namespace SQLSERVERPROCEDURE
 
                     if (VariableYValores.Count > 0)
                     {
-                        foreach (KeyValuePair<string, string> var in VariableYValores)
+                        foreach (var var in VariableYValores)
                         {
                             command.Parameters.Add(new SqlParameter(var.Key, var.Value));
                         }
@@ -65,19 +67,23 @@ namespace SQLSERVERPROCEDURE
 
                     SqlDataReader dr = command.ExecuteReader();
                     dt.Load(dr);
-                    ds.Tables.Add(dt);
+                    _ds.Tables.Add(dt);
                     conn.Close();
-                    return ds;
+                    return _ds;
                 }
-                catch (Exception)
+                catch (SqlException ex)
                 {
-                    throw;
+                    throw ex;
+                }
+                catch (Exception ex)
+                {
+                    throw ex;
                 }
             }
 
         }
 
-        public static void Query(string NombreConexion, string Procedimiento, Dictionary<string, string> VariableYValores)
+        public static void Exec(string NombreConexion, string Procedimiento, Dictionary<string, object> VariableYValores)
         {
 
             using (SqlConnection conn = new SqlConnection(ConfigurationManager.AppSettings[NombreConexion]))
@@ -89,7 +95,7 @@ namespace SQLSERVERPROCEDURE
 
                 if (VariableYValores.Count > 0)
                 {
-                    foreach (KeyValuePair<string, string> var in VariableYValores)
+                    foreach (var var in VariableYValores)
                     {
                         if (var.Key != "")
                         {
@@ -104,9 +110,14 @@ namespace SQLSERVERPROCEDURE
                     command.ExecuteNonQuery();
                     conn.Close();
                 }
-                catch (Exception)
+                catch (SqlException ex)
+                {
+                    throw new Exception(ex.Message);
+                }
+                catch (Exception ex)
                 {
                     conn.Close();
+                    throw ex;
                 }
             }
 
